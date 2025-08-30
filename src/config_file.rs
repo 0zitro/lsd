@@ -228,7 +228,7 @@ classic: false
 # == Blocks ==
 # This specifies the columns and their order when using the long and the tree
 # layout.
-# Possible values: permission, user, group, context, size, date, name, inode, git
+# Possible values: permission, user, group, context, size, size_value, date, name, inode, links, git
 blocks:
   - permission
   - user
@@ -246,18 +246,17 @@ color:
   when: auto
   # How to colorize the output.
   # When "classic" is set, this is set to "no-color".
-  # Possible values: default, no-color, no-lscolors, <theme-file-name>
-  # when specifying <theme-file-name>, lsd will look up theme file in
-  # XDG Base Directory if relative
-  # The file path if absolute
+  # Possible values: default, custom
+  # When "custom" is set, lsd will look in the config directory for `colors.yaml`.
   theme: default
 
 # == Date ==
 # This specifies the date format for the date column. The freeform format
-# accepts an strftime like string.
+# accepts a strftime like string.
 # When "classic" is set, this is set to "date".
-# Possible values: date, locale, relative, +<date_format>
-# date: date
+# Possible values: date, locale, relative, '+<date_format>'
+# `date_format` will be a `strftime` formatted value. e.g. `date: '+%d %b %y %X'` will give you a date like this: 17 Jun 21 20:14:55
+date: date
 
 # == Dereference ==
 # Whether to dereference symbolic links.
@@ -278,7 +277,7 @@ icons:
   # Which icon theme to use.
   # Possible values: fancy, unicode
   theme: fancy
-  # The string between the icons and the name.
+  # The string between the icon and the entry name.
   # Possible values: any string (eg: " |")
   separator: " "
 
@@ -307,6 +306,15 @@ recursion:
   # it unspecified for (virtually) infinite.
   # depth: 3
 
+# == Tree path ==
+# How to display paths in tree layout.
+# Relative paths are resolved against the current working directory.
+# Possible values: none, absolute, relative
+tree-path: none
+# Apply to root node only or to all children tree entries too.
+# Possible values: root, all
+tree-path-scope: root
+
 # == Size ==
 # Specifies the format of the size column.
 # Possible values: default, short, bytes
@@ -314,7 +322,7 @@ size: default
 
 # == Permission ==
 # Specify the format of the permission column.
-# Possible value: rwx, octal, attributes, disable
+# Possible values: rwx, octal, attributes, disable
 # permission: rwx
 
 # == Sorting ==
@@ -341,7 +349,7 @@ no-symlink: false
 total-size: false
 
 # == Hyperlink ==
-# Whether to display the total size of directories.
+# Whether to attach VT100 hyperlink to filenames
 # Possible values: always, auto, never
 hyperlink: never
 
@@ -362,14 +370,6 @@ truncate-owner:
   after:
   # String to be appended to a name if truncated.
   marker: ""
-
-# == Tree path ==
-# How to display paths in tree layout.
-# Possible values: none (default), absolute, relative (to CWD)
-tree-path: none
-# Apply to root node only or to all nodes.
-# Possible values: root (default), all (tree-path is applied to children too)
-tree-path-scope: root
 "#;
 
 #[cfg(test)]

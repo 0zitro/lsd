@@ -130,7 +130,7 @@ classic: false
 # == Blocks ==
 # This specifies the columns and their order when using the long and the tree
 # layout.
-# Possible values: permission, user, group, context, size, date, name, inode, links, git
+# Possible values: permission, user, group, context, size, size_value, date, name, inode, links, git
 blocks:
   - permission
   - user
@@ -179,8 +179,8 @@ icons:
   # Which icon theme to use.
   # Possible values: fancy, unicode
   theme: fancy
-  # Separator between icon and the name
-  # Default to 1 space
+  # The string between the icon and the entry name.
+  # Possible values: any string (eg: " |")
   separator: " "
 
 # == Ignore Globs ==
@@ -208,14 +208,23 @@ recursion:
   # it unspecified for (virtually) infinite.
   # depth: 3
 
+# == Tree path ==
+# How to display paths in tree layout.
+# Relative paths are resolved against the current working directory.
+# Possible values: none, absolute, relative
+tree-path: none
+# Apply to root node only or to all children tree entries too.
+# Possible values: root, all
+tree-path-scope: root
+
 # == Size ==
 # Specifies the format of the size column.
 # Possible values: default, short, bytes
 size: default
 
 # == Permission ==
-# Specify the format of the permission column
-# Possible value: rwx, octal, attributes (windows only), disable
+# Specify the format of the permission column.
+# Possible values: rwx, octal, attributes, disable
 # permission: rwx
 
 # == Sorting ==
@@ -242,7 +251,7 @@ no-symlink: false
 total-size: false
 
 # == Hyperlink ==
-# Attach hyperlink to filenames
+# Whether to attach VT100 hyperlink to filenames
 # Possible values: always, auto, never
 hyperlink: never
 
@@ -250,19 +259,14 @@ hyperlink: never
 # Specifies how the symlink arrow display, chars in both ascii and utf8
 symlink-arrow: ⇒
 
-# == Header ==
-# Whether to display block headers.
-# Possible values: false, true
-header: false
-
 # == Literal ==
-# Whether to show quotes on filenames.
+# Whether to print entry names without quoting
 # Possible values: false, true
 literal: false
 
 # == Truncate owner ==
-# How to truncate the username and group names for a file if they exceed a certain
-# number of characters.
+# How to truncate the username and group name for the file if they exceed a
+# certain number of characters.
 truncate-owner:
   # Number of characters to keep. By default, no truncation is done (empty value).
   after:

@@ -1,4 +1,5 @@
-//! Tree path display options for tree layout.
+//! This module defines the [TreePath]. To set it up from [Cli], a [Config] and its
+//! [Default] value, use the [configure_from](Configurable::configure_from) method.
 
 use super::Configurable;
 use crate::app::Cli;
