@@ -364,10 +364,12 @@ truncate-owner:
   marker: ""
 
 # == Tree path ==
-# How to display paths in tree layout: none (default), absolute, or relative to CWD
-# tree-path: none
-# Apply to root node only or to all nodes: root (default) or all
-# tree-path-scope: root
+# How to display paths in tree layout.
+# Possible values: none (default), absolute, relative (to CWD)
+tree-path: none
+# Apply to root node only or to all nodes.
+# Possible values: root (default), all (tree-path is applied to children too)
+tree-path-scope: root
 "#;
 
 #[cfg(test)]

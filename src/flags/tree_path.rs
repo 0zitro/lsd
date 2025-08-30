@@ -44,6 +44,8 @@ impl TreePathScope {
     }
 }
 
+
+
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Default)]
 pub struct TreePath {
     pub kind: TreePathType,
@@ -52,26 +54,22 @@ pub struct TreePath {
 
 impl Configurable<Self> for TreePath {
     fn from_cli(cli: &Cli) -> Option<Self> {
-        let kind = cli.tree_path.as_deref().map(TreePathType::from_arg_str);
-        let scope = cli
-            .tree_path_scope
-            .as_deref()
-            .map(TreePathScope::from_arg_str);
-        match (kind, scope) {
-            (None, None) => None,
-            (k, s) => Some(Self {
-                kind: k.unwrap_or_default(),
-                scope: s.unwrap_or_default(),
-            }),
-        }
+        Some(Self {
+            kind: TreePathType::from_arg_str(&cli.tree_path),
+            scope: TreePathScope::from_arg_str(&cli.tree_path_scope),
+        })
     }
 
     fn from_config(config: &Config) -> Option<Self> {
-        let kind = config.tree_path.as_deref().map(TreePathType::from_arg_str);
-        let scope = config
-            .tree_path_scope
-            .as_deref()
-            .map(TreePathScope::from_arg_str);
+        let kind =
+            config.tree_path
+                .as_deref()
+                .map(TreePathType::from_arg_str);
+        let scope =
+            config.tree_path_scope
+                .as_deref()
+                .map(TreePathScope::from_arg_str);
+
         match (kind, scope) {
             (None, None) => None,
             (k, s) => Some(Self {
