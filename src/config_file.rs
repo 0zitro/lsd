@@ -44,6 +44,8 @@ pub struct Config {
     pub header: Option<bool>,
     pub literal: Option<bool>,
     pub truncate_owner: Option<TruncateOwner>,
+    pub tree_path: Option<String>,
+    pub tree_path_scope: Option<String>,
 }
 
 #[derive(Eq, PartialEq, Debug, Deserialize)]
@@ -129,6 +131,8 @@ impl Config {
             header: None,
             literal: None,
             truncate_owner: None,
+            tree_path: None,
+            tree_path_scope: None,
         }
     }
 
@@ -358,6 +362,12 @@ truncate-owner:
   after:
   # String to be appended to a name if truncated.
   marker: ""
+
+# == Tree path ==
+# How to display paths in tree layout: none (default), absolute, or relative to CWD
+# tree-path: none
+# Apply to root node only or to all nodes: root (default) or all
+# tree-path-scope: root
 "#;
 
 #[cfg(test)]
@@ -428,6 +438,8 @@ mod tests {
                     after: None,
                     marker: Some("".to_string()),
                 }),
+                tree_path: None,
+                tree_path_scope: None,
             },
             c
         );

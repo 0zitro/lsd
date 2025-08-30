@@ -1,6 +1,6 @@
 use crate::color::{Colors, Elem};
 use crate::flags::blocks::Block;
-use crate::flags::{Display, Flags, HyperlinkOption, Layout};
+use crate::flags::{Display, Flags, HyperlinkOption, Layout, TreePathScope, TreePathType};
 use crate::git_theme::GitTheme;
 use crate::icon::Icons;
 use crate::meta::name::DisplayOption;
@@ -255,17 +255,53 @@ fn inner_display_tree(
             tree_depth_prefix.1.to_string()
         };
 
-        for block in get_output(
-            meta,
-            owner_cache,
-            colors,
-            icons,
-            git_theme,
-            flags,
-            &DisplayOption::FileName,
-            padding_rules,
-            (tree_index, &current_prefix),
-        ) {
+        // Choose display option based on tree-path flags
+        let display_option =
+            if      matches!(flags.tree_path.kind, TreePathType::Absolute)
+                    &&  (flags.tree_path.scope == TreePathScope::All
+                        || tree_depth_prefix.0 == 0)
+                { &DisplayOption::None }
+            else if matches!(flags.tree_path.kind, TreePathType::Relative)
+                    &&  (flags.tree_path.scope == TreePathScope::All
+                        || tree_depth_prefix.0 == 0)
+                { &DisplayOption::FileName }
+            else
+                { &DisplayOption::FileName };
+
+        let blocks =
+            if  matches!(flags.tree_path.kind, TreePathType::Relative)
+                &&  (flags.tree_path.scope == TreePathScope::All
+                    || tree_depth_prefix.0 == 0)
+            {
+                let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+                let rel = DisplayOption::Relative { base_path: &cwd };
+                get_output(
+                    meta,
+                    owner_cache,
+                    colors,
+                    icons,
+                    git_theme,
+                    flags,
+                    &rel,
+                    padding_rules,
+                    (tree_index, &current_prefix),
+                )
+            }
+            else {
+                get_output(
+                    meta,
+                    owner_cache,
+                    colors,
+                    icons,
+                    git_theme,
+                    flags,
+                    display_option,
+                    padding_rules,
+                    (tree_index, &current_prefix),
+                )
+            };
+
+        for block in blocks {
             cells.push(Cell {
                 width: get_visible_width(&block, flags.hyperlink == HyperlinkOption::Always),
                 contents: block,
@@ -501,13 +537,13 @@ fn get_padding_rules(metas: &[Meta], flags: &Flags) -> HashMap<Block, usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Config;
     use crate::app::Cli;
     use crate::color;
     use crate::color::Colors;
     use crate::flags::{HyperlinkOption, IconOption, IconTheme as FlagTheme, PermissionFlag};
     use crate::icon::Icons;
     use crate::meta::{FileType, Name};
+    use crate::Config;
     use crate::{flags, sort};
     use assert_fs::prelude::*;
     use clap::Parser;
