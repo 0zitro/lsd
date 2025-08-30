@@ -6,7 +6,7 @@ use crate::print_error;
 use crate::url::Url;
 use std::cmp::{Ordering, PartialOrd};
 use std::ffi::OsStr;
-use std::path::{absolute as make_absolute_path, Component, Path, PathBuf};
+use std::path::{Component, Path, PathBuf, absolute as make_absolute_path};
 
 #[derive(Debug)]
 pub enum DisplayOption<'a> {
