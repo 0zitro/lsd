@@ -173,7 +173,7 @@ pub struct Cli {
     pub tree_path: Option<String>,
 
     /// Apply the tree-path mode to the root only or to all nodes [default: root]
-    #[arg(long, requires = "tree-path", value_name = "SCOPE", value_parser = ["root", "all"])]
+    #[arg(long, value_name = "SCOPE", value_parser = ["root", "all"])]
     pub tree_path_scope: Option<String>,
 
     /// Attach hyperlink to filenames [default: never]

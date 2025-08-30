@@ -245,6 +245,37 @@ mod test {
     use tempfile::tempdir;
 
     #[test]
+    fn test_render_with_display_option_none_shows_absolute_path() {
+        let tmp_dir = tempdir().expect("failed to create temp dir");
+        let icons = Icons::new(false, IconOption::Never, FlagTheme::Fancy, " ".to_string());
+
+        // Create a file and build Meta/Name for it
+        let file_path = tmp_dir.path().join("abs.txt");
+        File::create(&file_path).expect("failed to create file");
+        let meta = Meta::from_path(&file_path, false, PermissionFlag::Rwx).unwrap();
+
+        let colors = Colors::new(color::ThemeOption::NoColor);
+
+        let rendered = meta
+            .name
+            .render(
+                &colors,
+                &icons,
+                &DisplayOption::None,
+                HyperlinkOption::Never,
+                true,
+            )
+            .to_string();
+
+        let absolute = std::path::absolute(&file_path)
+            .expect("absolute")
+            .to_string_lossy()
+            .to_string();
+
+        assert!(rendered.ends_with(&absolute), "rendered={rendered} absolute={absolute}");
+    }
+
+    #[test]
     #[cfg(unix)] // Windows uses different default permissions
     fn test_print_file_name() {
         let tmp_dir = tempdir().expect("failed to create temp dir");

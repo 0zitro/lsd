@@ -392,7 +392,7 @@ mod tests {
 
     #[test]
     fn test_read_default() {
-        let c = Config::from_yaml(config_file::DEFAULT_CONFIG).unwrap();
+        let c = Config::builtin();
         assert_eq!(
             Config {
                 classic: Some(false),
@@ -408,7 +408,7 @@ mod tests {
                     when: Some(ColorOption::Auto),
                     theme: Some(ThemeOption::Default)
                 }),
-                date: None,
+                date: Some("date".into()),
                 dereference: Some(false),
                 display: None,
                 icons: Some(config_file::Icons {
@@ -440,8 +440,8 @@ mod tests {
                     after: None,
                     marker: Some("".to_string()),
                 }),
-                tree_path: None,
-                tree_path_scope: None,
+                tree_path: Some("none".into()),
+                tree_path_scope: Some("root".into()),
             },
             c
         );

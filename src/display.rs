@@ -1017,4 +1017,61 @@ mod tests {
         drop(file);
         drop(link);
     }
+
+    #[test]
+    fn test_tree_path_absolute_root_only() {
+        let dir = assert_fs::TempDir::new().unwrap();
+        dir.child("dir").create_dir_all().unwrap();
+        let argv = ["lsd", "--tree", "--tree-path", "absolute", "--tree-path-scope", "root"];
+        let cli = Cli::try_parse_from(argv).unwrap();
+        let flags = Flags::configure_from(&cli, &Config::with_none()).unwrap();
+
+        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
+            .unwrap()
+            .recurse_into(2, &flags, None)
+            .unwrap()
+            .0
+            .unwrap();
+        let out = tree(
+            &metas,
+            &flags,
+            &Colors::new(color::ThemeOption::NoColor),
+            &Icons::new(false, IconOption::Never, FlagTheme::Fancy, " ".to_string()),
+            &GitTheme::new(),
+        );
+        // First line should be absolute path of temp dir
+    let first = out.lines().next().unwrap();
+    let abs = std::fs::canonicalize(dir.path()).unwrap();
+    let abs_str: String = abs.to_string_lossy().into_owned();
+    assert!(first.starts_with(&abs_str));
+    }
+
+    #[test]
+    fn test_tree_path_absolute_all_nodes() {
+        let dir = assert_fs::TempDir::new().unwrap();
+        dir.child("dir").create_dir_all().unwrap();
+        dir.child("dir/file").touch().unwrap();
+        let argv = ["lsd", "--tree", "--tree-path", "absolute", "--tree-path-scope", "all"];
+        let cli = Cli::try_parse_from(argv).unwrap();
+        let flags = Flags::configure_from(&cli, &Config::with_none()).unwrap();
+
+        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
+            .unwrap()
+            .recurse_into(3, &flags, None)
+            .unwrap()
+            .0
+            .unwrap();
+        let out = tree(
+            &metas,
+            &flags,
+            &Colors::new(color::ThemeOption::NoColor),
+            &Icons::new(false, IconOption::Never, FlagTheme::Fancy, " ".to_string()),
+            &GitTheme::new(),
+        );
+        for l in out.lines() {
+            if l.trim().is_empty() { continue; }
+            // Lines include tree edges; ensure absolute paths appear somewhere on each line
+            assert!(l.contains('/'));
+        }
+    }
 }

@@ -83,3 +83,82 @@ impl Configurable<Self> for TreePath {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::flags::Flags;
+    use crate::{Config, app::Cli};
+    use clap::Parser;
+
+    // Contract:
+    // - configure_from combines CLI, env (n/a), and config; CLI takes precedence.
+    // - Default when neither set is (None, Root).
+    // - If only scope provided, kind defaults to None.
+    // - If only kind provided, scope defaults to Root.
+
+    #[test]
+    fn tree_path_default_when_unset() {
+        let argv = ["lsd"]; // no cli args
+        let cli = Cli::try_parse_from(argv).unwrap();
+        let cfg = Config::with_none(); // no config
+        let flags = Flags::configure_from(&cli, &cfg).unwrap();
+        assert_eq!(TreePathType::None, flags.tree_path.kind);
+        assert_eq!(TreePathScope::Root, flags.tree_path.scope);
+    }
+
+    #[test]
+    fn tree_path_from_config_only_kind_defaults_scope() {
+        let argv = ["lsd"]; // no cli args
+        let cli = Cli::try_parse_from(argv).unwrap();
+        let mut cfg = Config::with_none();
+        cfg.tree_path = Some("absolute".into());
+        let flags = Flags::configure_from(&cli, &cfg).unwrap();
+        assert_eq!(TreePathType::Absolute, flags.tree_path.kind);
+        assert_eq!(TreePathScope::Root, flags.tree_path.scope);
+    }
+
+    #[test]
+    fn tree_path_from_config_both() {
+        let argv = ["lsd"]; // no cli args
+        let cli = Cli::try_parse_from(argv).unwrap();
+        let cfg = serde_yaml::from_str::<Config>(r#"
+            tree-path: relative
+            tree-path-scope: all
+        "#).unwrap();
+        let flags = Flags::configure_from(&cli, &cfg).unwrap();
+        assert_eq!(TreePathType::Relative, flags.tree_path.kind);
+        assert_eq!(TreePathScope::All, flags.tree_path.scope);
+    }
+
+    #[test]
+    fn tree_path_from_cli_overrides_config() {
+        let argv = [
+            "lsd",
+            "--tree-path",
+            "absolute",
+            "--tree-path-scope",
+            "all",
+        ];
+        let cli = Cli::try_parse_from(argv).unwrap();
+        let cfg = serde_yaml::from_str::<Config>(r#"
+            tree-path: relative
+            tree-path-scope: root
+        "#).unwrap();
+        let flags = Flags::configure_from(&cli, &cfg).unwrap();
+        assert_eq!(TreePathType::Absolute, flags.tree_path.kind);
+        assert_eq!(TreePathScope::All, flags.tree_path.scope);
+    }
+
+    #[test]
+    fn tree_path_scope_from_cli_and_kind_from_config() {
+        let argv = ["lsd", "--tree-path-scope", "all"]; // only scope via CLI
+        let cli = Cli::try_parse_from(argv).unwrap();
+        let cfg = serde_yaml::from_str::<Config>(r#"
+            tree-path: absolute
+        "#).unwrap();
+        let flags = Flags::configure_from(&cli, &cfg).unwrap();
+        assert_eq!(TreePathType::None, flags.tree_path.kind);
+        assert_eq!(TreePathScope::All, flags.tree_path.scope);
+    }
+}
