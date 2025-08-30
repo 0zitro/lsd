@@ -172,7 +172,7 @@ pub struct Cli {
     #[arg(short = 'P', long, value_name = "MODE", value_parser = ["none", "absolute", "relative"])]
     pub tree_path: Option<String>,
 
-    /// Apply the tree-path mode to the root only or to all nodes [default: root]
+    /// Apply the tree-path mode to the root only or also to all the child entries [default: root]
     #[arg(long, value_name = "SCOPE", value_parser = ["root", "all"])]
     pub tree_path_scope: Option<String>,
 

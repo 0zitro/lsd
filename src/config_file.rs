@@ -311,7 +311,7 @@ recursion:
 # Relative paths are resolved against the current working directory.
 # Possible values: none, absolute, relative
 tree-path: none
-# Apply to root node only or to all children tree entries too.
+# Apply to root node only or also to all the child entries.
 # Possible values: root, all
 tree-path-scope: root
 

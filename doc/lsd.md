@@ -86,6 +86,12 @@ lsd is a ls command with a lot of pretty colours and some other stuff to enrich 
 `--tree`
 : Recurse into directories and present the result as a tree
 
+`-P`, `--tree-path <mode>...`
+: Show full path or CWD-relative path in tree mode [default: none]  [possible values: none, absolute, relative]
+
+`--tree-path-scope <scope>...`
+: Apply the tree-path mode to the root only or also to all the child entries [default: root]  [possible values: root, all]
+
 `-V`, `--version`
 : Prints version information
 
