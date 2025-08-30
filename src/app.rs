@@ -168,13 +168,13 @@ pub struct Cli {
     #[arg(short = 'Z', long)]
     pub context: bool,
 
-    /// Show full path or CWD-relative path in tree mode
-    #[arg(short = 'P', long, requires = "tree-path", value_name = "MODE", default_value = "none", value_parser = ["none", "absolute", "relative"])]
-    pub tree_path: String,
+    /// Show full path or CWD-relative path in tree mode [default: none]
+    #[arg(short = 'P', long, value_name = "MODE", value_parser = ["none", "absolute", "relative"])]
+    pub tree_path: Option<String>,
 
-    /// Apply the tree-path mode to the root only or to all nodes
-    #[arg(long, requires = "tree-path", value_name = "SCOPE", default_value = "root", value_parser = ["root", "all"])]
-    pub tree_path_scope: String,
+    /// Apply the tree-path mode to the root only or to all nodes [default: root]
+    #[arg(long, requires = "tree-path", value_name = "SCOPE", value_parser = ["root", "all"])]
+    pub tree_path_scope: Option<String>,
 
     /// Attach hyperlink to filenames [default: never]
     #[arg(long, value_name = "MODE", value_parser = ["always", "auto", "never"])]
