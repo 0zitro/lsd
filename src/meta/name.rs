@@ -6,7 +6,7 @@ use crate::print_error;
 use crate::url::Url;
 use std::cmp::{Ordering, PartialOrd};
 use std::ffi::OsStr;
-use std::path::{Component, Path, PathBuf};
+use std::path::{absolute as make_absolute_path, Component, Path, PathBuf};
 
 #[derive(Debug)]
 pub enum DisplayOption<'a> {
@@ -168,7 +168,13 @@ impl Name {
                 "{}{}",
                 icons.get(self),
                 self.hyperlink(
-                    self.escape(&self.path.to_string_lossy(), literal),
+                    self.escape(
+                        make_absolute_path(&self.path)
+                            .expect("either path was empty or cwd() failed")
+                            .to_string_lossy()
+                            .as_ref(),
+                        literal,
+                    ),
                     hyperlink
                 )
             ),
