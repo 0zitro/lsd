@@ -154,7 +154,7 @@ pub struct Cli {
     #[arg(short, long)]
     pub inode: bool,
 
-    /// Show git status on file and directory"
+    /// Show git status on file and directory.
     /// Only when used with --long option
     #[arg(short, long)]
     pub git: bool,
@@ -167,6 +167,14 @@ pub struct Cli {
     /// Print security context (label) of each file
     #[arg(short = 'Z', long)]
     pub context: bool,
+
+    /// Show full path or CWD-relative path in tree mode [default: none]
+    #[arg(short = 'P', long, value_name = "MODE", value_parser = ["none", "absolute", "relative"])]
+    pub tree_path: Option<String>,
+
+    /// Apply the tree-path mode to the root only or also to all the child entries [default: root]
+    #[arg(long, value_name = "SCOPE", value_parser = ["root", "all"])]
+    pub tree_path_scope: Option<String>,
 
     /// Attach hyperlink to filenames [default: never]
     #[arg(long, value_name = "MODE", value_parser = ["always", "auto", "never"])]

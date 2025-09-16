@@ -17,6 +17,7 @@ pub mod sorting;
 pub mod symlink_arrow;
 pub mod symlinks;
 pub mod total_size;
+pub mod tree_path;
 pub mod truncate_owner;
 
 pub use blocks::Blocks;
@@ -44,6 +45,7 @@ pub use sorting::Sorting;
 pub use symlink_arrow::SymlinkArrow;
 pub use symlinks::NoSymlink;
 pub use total_size::TotalSize;
+pub use tree_path::{TreePath, TreePathScope, TreePathType};
 pub use truncate_owner::TruncateOwner;
 
 use crate::app::Cli;
@@ -77,6 +79,7 @@ pub struct Flags {
     pub header: Header,
     pub literal: Literal,
     pub truncate_owner: TruncateOwner,
+    pub tree_path: TreePath,
 }
 
 impl Flags {
@@ -108,6 +111,7 @@ impl Flags {
             header: Header::configure_from(cli, config),
             literal: Literal::configure_from(cli, config),
             truncate_owner: TruncateOwner::configure_from(cli, config),
+            tree_path: TreePath::configure_from(cli, config),
         })
     }
 }

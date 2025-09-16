@@ -1,6 +1,6 @@
 use crate::color::{Colors, Elem};
 use crate::flags::blocks::Block;
-use crate::flags::{Display, Flags, HyperlinkOption, Layout};
+use crate::flags::{Display, Flags, HyperlinkOption, Layout, TreePathScope, TreePathType};
 use crate::git_theme::GitTheme;
 use crate::icon::Icons;
 use crate::meta::name::DisplayOption;
@@ -255,17 +255,50 @@ fn inner_display_tree(
             tree_depth_prefix.1.to_string()
         };
 
-        for block in get_output(
-            meta,
-            owner_cache,
-            colors,
-            icons,
-            git_theme,
-            flags,
-            &DisplayOption::FileName,
-            padding_rules,
-            (tree_index, &current_prefix),
-        ) {
+        // Choose display option based on tree-path flags
+        let display_option = if matches!(flags.tree_path.kind, TreePathType::Absolute)
+            && (flags.tree_path.scope == TreePathScope::All || tree_depth_prefix.0 == 0)
+        {
+            &DisplayOption::None
+        } else if matches!(flags.tree_path.kind, TreePathType::Relative)
+            && (flags.tree_path.scope == TreePathScope::All || tree_depth_prefix.0 == 0)
+        {
+            &DisplayOption::FileName
+        } else {
+            &DisplayOption::FileName
+        };
+
+        let blocks = if matches!(flags.tree_path.kind, TreePathType::Relative)
+            && (flags.tree_path.scope == TreePathScope::All || tree_depth_prefix.0 == 0)
+        {
+            let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+            let rel = DisplayOption::Relative { base_path: &cwd };
+            get_output(
+                meta,
+                owner_cache,
+                colors,
+                icons,
+                git_theme,
+                flags,
+                &rel,
+                padding_rules,
+                (tree_index, &current_prefix),
+            )
+        } else {
+            get_output(
+                meta,
+                owner_cache,
+                colors,
+                icons,
+                git_theme,
+                flags,
+                display_option,
+                padding_rules,
+                (tree_index, &current_prefix),
+            )
+        };
+
+        for block in blocks {
             cells.push(Cell {
                 width: get_visible_width(&block, flags.hyperlink == HyperlinkOption::Always),
                 contents: block,
@@ -983,5 +1016,62 @@ mod tests {
         drop(dir); // to avoid clippy complains about previous .clone()
         drop(file);
         drop(link);
+    }
+
+    #[test]
+    fn test_tree_path_absolute_root_only() {
+        let dir = assert_fs::TempDir::new().unwrap();
+        dir.child("dir").create_dir_all().unwrap();
+        let argv = ["lsd", "--tree", "--tree-path", "absolute", "--tree-path-scope", "root"];
+        let cli = Cli::try_parse_from(argv).unwrap();
+        let flags = Flags::configure_from(&cli, &Config::with_none()).unwrap();
+
+        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
+            .unwrap()
+            .recurse_into(2, &flags, None)
+            .unwrap()
+            .0
+            .unwrap();
+        let out = tree(
+            &metas,
+            &flags,
+            &Colors::new(color::ThemeOption::NoColor),
+            &Icons::new(false, IconOption::Never, FlagTheme::Fancy, " ".to_string()),
+            &GitTheme::new(),
+        );
+        // First line should be absolute path of temp dir
+    let first = out.lines().next().unwrap();
+    let abs = std::fs::canonicalize(dir.path()).unwrap();
+    let abs_str: String = abs.to_string_lossy().into_owned();
+    assert!(first.starts_with(&abs_str));
+    }
+
+    #[test]
+    fn test_tree_path_absolute_all_nodes() {
+        let dir = assert_fs::TempDir::new().unwrap();
+        dir.child("dir").create_dir_all().unwrap();
+        dir.child("dir/file").touch().unwrap();
+        let argv = ["lsd", "--tree", "--tree-path", "absolute", "--tree-path-scope", "all"];
+        let cli = Cli::try_parse_from(argv).unwrap();
+        let flags = Flags::configure_from(&cli, &Config::with_none()).unwrap();
+
+        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
+            .unwrap()
+            .recurse_into(3, &flags, None)
+            .unwrap()
+            .0
+            .unwrap();
+        let out = tree(
+            &metas,
+            &flags,
+            &Colors::new(color::ThemeOption::NoColor),
+            &Icons::new(false, IconOption::Never, FlagTheme::Fancy, " ".to_string()),
+            &GitTheme::new(),
+        );
+        for l in out.lines() {
+            if l.trim().is_empty() { continue; }
+            // Lines include tree edges; ensure absolute paths appear somewhere on each line
+            assert!(l.contains('/'));
+        }
     }
 }

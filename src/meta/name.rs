@@ -6,7 +6,7 @@ use crate::print_error;
 use crate::url::Url;
 use std::cmp::{Ordering, PartialOrd};
 use std::ffi::OsStr;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Component, Path, PathBuf, absolute as make_absolute_path};
 
 #[derive(Debug)]
 pub enum DisplayOption<'a> {
@@ -168,7 +168,13 @@ impl Name {
                 "{}{}",
                 icons.get(self),
                 self.hyperlink(
-                    self.escape(&self.path.to_string_lossy(), literal),
+                    self.escape(
+                        make_absolute_path(&self.path)
+                            .expect("either path was empty or cwd() failed")
+                            .to_string_lossy()
+                            .as_ref(),
+                        literal,
+                    ),
                     hyperlink
                 )
             ),
@@ -237,6 +243,37 @@ mod test {
     #[cfg(unix)]
     use std::process::Command;
     use tempfile::tempdir;
+
+    #[test]
+    fn test_render_with_display_option_none_shows_absolute_path() {
+        let tmp_dir = tempdir().expect("failed to create temp dir");
+        let icons = Icons::new(false, IconOption::Never, FlagTheme::Fancy, " ".to_string());
+
+        // Create a file and build Meta/Name for it
+        let file_path = tmp_dir.path().join("abs.txt");
+        File::create(&file_path).expect("failed to create file");
+        let meta = Meta::from_path(&file_path, false, PermissionFlag::Rwx).unwrap();
+
+        let colors = Colors::new(color::ThemeOption::NoColor);
+
+        let rendered = meta
+            .name
+            .render(
+                &colors,
+                &icons,
+                &DisplayOption::None,
+                HyperlinkOption::Never,
+                true,
+            )
+            .to_string();
+
+        let absolute = std::path::absolute(&file_path)
+            .expect("absolute")
+            .to_string_lossy()
+            .to_string();
+
+        assert!(rendered.ends_with(&absolute), "rendered={rendered} absolute={absolute}");
+    }
 
     #[test]
     #[cfg(unix)] // Windows uses different default permissions
