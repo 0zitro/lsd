@@ -35,6 +35,7 @@ mod flags;
 mod git;
 mod git_theme;
 mod icon;
+mod gitignore;
 mod meta;
 mod sort;
 mod theme;

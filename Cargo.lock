@@ -919,6 +919,7 @@ dependencies = [
  "git2",
  "globset",
  "human-sort",
+ "ignore",
  "libc",
  "lscolors",
  "once_cell",

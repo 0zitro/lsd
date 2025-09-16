@@ -33,6 +33,7 @@ pub use self::size::Size;
 pub use self::symlink::SymLink;
 
 use crate::flags::{Display, Flags, Layout, PermissionFlag};
+use crate::gitignore::GitignoreCtx;
 use crate::{ExitCode, print_error};
 
 use crate::git::GitCache;
@@ -65,6 +66,7 @@ impl Meta {
         depth: usize,
         flags: &Flags,
         cache: Option<&GitCache>,
+        gitignore_ctx: Option<&GitignoreCtx>,
     ) -> io::Result<(Option<Vec<Meta>>, ExitCode)> {
         if depth == 0 {
             return Ok((None, ExitCode::OK));
@@ -116,6 +118,9 @@ impl Meta {
 
         let mut exit_code = ExitCode::OK;
 
+        // Prepare child gitignore context by loading this directory's .gitignore
+        let child_gitignore_ctx = gitignore_ctx.map(|c| c.with_dir(&self.path));
+
         for entry in entries {
             let entry = entry?;
             let path = entry.path();
@@ -126,6 +131,12 @@ impl Meta {
 
             if flags.ignore_globs.0.is_match(name) {
                 continue;
+            }
+
+            if let Some(ctx) = &child_gitignore_ctx {
+                if ctx.is_ignored(&path, entry.file_type()?.is_dir()) {
+                    continue;
+                }
             }
 
             #[cfg(windows)]
@@ -167,7 +178,7 @@ impl Meta {
 
             // check dereferencing
             if flags.dereference.0 || !matches!(entry_meta.file_type, FileType::SymLink { .. }) {
-                match entry_meta.recurse_into(depth - 1, flags, cache) {
+                match entry_meta.recurse_into(depth - 1, flags, cache, child_gitignore_ctx.as_ref()) {
                     Ok((content, rec_exit_code)) => {
                         entry_meta.content = content;
                         exit_code.set_if_greater(rec_exit_code);

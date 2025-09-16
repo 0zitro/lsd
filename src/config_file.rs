@@ -31,6 +31,7 @@ pub struct Config {
     pub display: Option<Display>,
     pub icons: Option<Icons>,
     pub ignore_globs: Option<Vec<String>>,
+    pub gitignore: Option<bool>,
     pub indicators: Option<bool>,
     pub layout: Option<Layout>,
     pub recursion: Option<Recursion>,
@@ -116,6 +117,7 @@ impl Config {
             display: None,
             icons: None,
             ignore_globs: None,
+            gitignore: None,
             indicators: None,
             layout: None,
             recursion: None,
@@ -283,6 +285,12 @@ icons:
 # ignore-globs:
 #   - .git
 
+# == Gitignore ==
+# Respect git-style ignore files when listing. When enabled, entries ignored by
+# .gitignore files in directories and .git/info/exclude are not displayed.
+# Possible values: false, true
+# gitignore: false
+
 # == Indicators ==
 # Whether to add indicator characters to certain listed files.
 # Possible values: false, true
@@ -405,6 +413,7 @@ mod tests {
                     separator: Some(" ".to_string()),
                 }),
                 ignore_globs: None,
+                gitignore: None,
                 indicators: Some(false),
                 layout: Some(Layout::Grid),
                 recursion: Some(config_file::Recursion {

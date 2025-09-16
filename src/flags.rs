@@ -7,6 +7,7 @@ pub mod header;
 pub mod hyperlink;
 pub mod icons;
 pub mod ignore_globs;
+pub mod gitignore;
 pub mod indicators;
 pub mod layout;
 pub mod literal;
@@ -31,6 +32,7 @@ pub use icons::IconOption;
 pub use icons::IconTheme;
 pub use icons::Icons;
 pub use ignore_globs::IgnoreGlobs;
+pub use gitignore::GitIgnore;
 pub use indicators::Indicators;
 pub use layout::Layout;
 pub use literal::Literal;
@@ -65,6 +67,7 @@ pub struct Flags {
     pub display_indicators: Indicators,
     pub icons: Icons,
     pub ignore_globs: IgnoreGlobs,
+    pub gitignore: GitIgnore,
     pub layout: Layout,
     pub no_symlink: NoSymlink,
     pub recursion: Recursion,
@@ -99,6 +102,7 @@ impl Flags {
             display_indicators: Indicators::configure_from(cli, config),
             icons: Icons::configure_from(cli, config),
             ignore_globs: IgnoreGlobs::configure_from(cli, config)?,
+            gitignore: GitIgnore::configure_from(cli, config),
             no_symlink: NoSymlink::configure_from(cli, config),
             recursion: Recursion::configure_from(cli, config),
             sorting: Sorting::configure_from(cli, config),
