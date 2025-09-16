@@ -5,9 +5,10 @@ use assert_cmd::prelude::*;
 use assert_fs::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
+use std::fs as stdfs;
 
 #[cfg(unix)]
-use std::os::unix::fs;
+use std::os::unix::fs as unixfs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
@@ -198,7 +199,7 @@ fn test_list_broken_link_ok() {
     let dir = tempdir();
     let broken_link = dir.path().join("broken-softlink");
     let matched = "No such file or directory";
-    fs::symlink("not-existed-file", &broken_link).unwrap();
+    unixfs::symlink("not-existed-file", &broken_link).unwrap();
 
     cmd()
         .arg(&broken_link)
@@ -223,7 +224,7 @@ fn test_nosymlink_on_non_long() {
     dir.child("target").child("inside").touch().unwrap();
     let link = dir.path().join("link");
     let link_icon = "⇒";
-    fs::symlink("target", &link).unwrap();
+    unixfs::symlink("target", &link).unwrap();
 
     cmd()
         .arg("--ignore-config")
@@ -241,7 +242,7 @@ fn test_symlink_on_long() {
     dir.child("target").child("inside").touch().unwrap();
     let link = dir.path().join("link");
     let link_icon = "⇒";
-    fs::symlink("target", &link).unwrap();
+    unixfs::symlink("target", &link).unwrap();
 
     cmd()
         .arg("-l")
@@ -259,7 +260,7 @@ fn test_dereference_link_right_type_and_no_link() {
     let link = dir.path().join("link");
     let file_type = ".rw";
     let link_icon = "⇒";
-    fs::symlink("target", &link).unwrap();
+    unixfs::symlink("target", &link).unwrap();
 
     cmd()
         .arg("-l")
@@ -285,7 +286,7 @@ fn test_dereference_link_right_type_and_no_link() {
 fn test_dereference_link_broken_link() {
     let dir = tempdir();
     let link = dir.path().join("link");
-    fs::symlink("target", &link).unwrap();
+    unixfs::symlink("target", &link).unwrap();
 
     cmd()
         .arg("-l")
@@ -312,7 +313,7 @@ fn test_dereference_link_broken_link_output() {
     let target = dir.path().join("target");
 
     #[cfg(unix)]
-    fs::symlink(target, &link).unwrap();
+    unixfs::symlink(target, &link).unwrap();
 
     // this needs to be tested on Windows
     // likely to fail because of permission issue
@@ -344,7 +345,7 @@ fn test_show_folder_content_of_symlink() {
     let dir = tempdir();
     dir.child("target").child("inside").touch().unwrap();
     let link = dir.path().join("link");
-    fs::symlink("target", &link).unwrap();
+    unixfs::symlink("target", &link).unwrap();
 
     cmd()
         .arg("--ignore-config")
@@ -362,7 +363,7 @@ fn test_no_show_folder_content_of_symlink_for_long() {
     let dir = tempdir();
     dir.child("target").child("inside").touch().unwrap();
     let link = dir.path().join("link");
-    fs::symlink("target", &link).unwrap();
+    unixfs::symlink("target", &link).unwrap();
 
     cmd()
         .arg("-l")
@@ -381,7 +382,7 @@ fn test_show_folder_content_of_symlink_for_long_tail_slash() {
     let dir = tempdir();
     dir.child("target").child("inside").touch().unwrap();
     let link = dir.path().join("link");
-    fs::symlink("target", link).unwrap();
+    unixfs::symlink("target", link).unwrap();
 
     cmd()
         .arg("-l")
@@ -398,7 +399,7 @@ fn test_show_folder_of_symlink_for_long_multi() {
     let dir = tempdir();
     dir.child("target").child("inside").touch().unwrap();
     let link = dir.path().join("link");
-    fs::symlink("target", link).unwrap();
+    unixfs::symlink("target", link).unwrap();
 
     cmd()
         .arg("-l")
@@ -581,7 +582,7 @@ fn test_tree_no_dereference() {
     tmp.child("one.d").create_dir_all().unwrap();
     tmp.child("one.d/samplefile").touch().unwrap();
     let link = tmp.path().join("link");
-    fs::symlink("one.d", link).unwrap();
+    unixfs::symlink("one.d", link).unwrap();
 
     cmd()
         .arg("--tree")
@@ -600,7 +601,7 @@ fn test_tree_dereference() {
     tmp.child("one.d").create_dir_all().unwrap();
     tmp.child("one.d/samplefile").touch().unwrap();
     let link = tmp.path().join("link");
-    fs::symlink("one.d", link).unwrap();
+    unixfs::symlink("one.d", link).unwrap();
 
     cmd()
         .arg("--ignore-config")
@@ -828,4 +829,171 @@ fn test_multiple_files() {
         .arg(dir.path().join("two"))
         .assert()
         .stdout(predicate::str::is_match(".").unwrap());
+}
+
+#[test]
+fn test_gitignore_simple_glob_and_negation() {
+    let dir = tempdir();
+    dir.child("foo").touch().unwrap();
+    dir.child("bar.log").touch().unwrap();
+    dir.child("keep.log").touch().unwrap();
+    dir.child("keep.txt").touch().unwrap();
+    dir.child(".gitignore")
+        .write_str(
+            "foo\n*.log\n!keep.log\n"
+        )
+        .unwrap();
+
+    cmd()
+        .arg("--gitignore")
+        .arg("--ignore-config")
+        .arg(dir.path())
+        .assert()
+        .stdout(predicate::str::is_match(r"keep\.log\nkeep\.txt\n$").unwrap());
+}
+
+#[test]
+#[cfg(not(feature = "no-git"))]
+fn test_git_info_exclude_hides_files() {
+    // Skip if git is not available in PATH (cross-platform)
+    if Command::new("git").arg("--version").status().ok().filter(|s| s.success()).is_none() {
+        return;
+    }
+    let dir = tempdir();
+    // Initialize a git repo in dir using git CLI
+    assert!(
+        Command::new("git")
+            .current_dir(dir.path())
+            .args(["init", "-q"]).status().unwrap().success()
+    );
+    // Create .git/info/exclude
+    let exclude_path = dir.path().join(".git").join("info").join("exclude");
+    stdfs::create_dir_all(exclude_path.parent().unwrap()).unwrap();
+    stdfs::write(&exclude_path, b"excluded.txt\n").unwrap();
+
+    dir.child("excluded.txt").touch().unwrap();
+    dir.child("shown.txt").touch().unwrap();
+
+    cmd()
+        .arg("--gitignore")
+        .arg("--ignore-config")
+        .arg(dir.path())
+        .assert()
+        .stdout(predicate::str::is_match(r"shown\.txt\r?\n$").unwrap())
+        .stdout(predicate::str::contains("excluded.txt").not());
+}
+
+#[test]
+#[cfg(not(feature = "no-git"))]
+fn test_submodule_git_info_exclude_hides_files() {
+    // Skip if git is not available in PATH (cross-platform)
+    if Command::new("git").arg("--version").status().ok().filter(|s| s.success()).is_none() {
+        return;
+    }
+    // Prepare a root repo
+    let root = tempdir();
+    assert!(
+        Command::new("git")
+            .current_dir(root.path())
+            .args(["init", "-q"])
+            .status()
+            .unwrap()
+            .success()
+    );
+    // Ensure commits don't require GPG signing and file protocol is allowed
+    assert!(
+        Command::new("git")
+            .current_dir(root.path())
+            .args(["config", "commit.gpgsign", "false"]).status().unwrap().success()
+    );
+    // Newer git may block file:// for submodule add; allow local path
+    let _ = Command::new("git")
+        .current_dir(root.path())
+        .args(["config", "protocol.file.allow", "always"]).status();
+    assert!(
+        Command::new("git")
+            .current_dir(root.path())
+            .args(["config", "user.name", "test"]).status().unwrap().success()
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(root.path())
+            .args(["config", "user.email", "test@example.com"]).status().unwrap().success()
+    );
+
+    // Prepare a local repo to use as submodule source
+    let sub_src = tempdir();
+    assert!(
+        Command::new("git")
+            .current_dir(sub_src.path())
+            .args(["init", "-q"])
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(sub_src.path())
+            .args(["config", "commit.gpgsign", "false"]).status().unwrap().success()
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(sub_src.path())
+            .args(["config", "user.name", "test"]).status().unwrap().success()
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(sub_src.path())
+            .args(["config", "user.email", "test@example.com"]).status().unwrap().success()
+    );
+    stdfs::write(sub_src.path().join("README"), b"submodule").unwrap();
+    assert!(
+        Command::new("git")
+            .current_dir(sub_src.path())
+            .args(["add", "-A"]).status().unwrap().success()
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(sub_src.path())
+            .args(["commit", "-q", "-m", "init"]).status().unwrap().success()
+    );
+
+    // Add submodule to root as ./sub
+    assert!(
+        Command::new("git")
+            .current_dir(root.path())
+            .args([
+                "-c",
+                "protocol.file.allow=always",
+                "-c",
+                "protocol.allow=always",
+                "submodule",
+                "add",
+                sub_src.path().to_str().unwrap(),
+                "sub",
+            ]) // noisy
+            .status()
+            .unwrap()
+            .success()
+    );
+
+    // Write info/exclude for the submodule (in root/.git/modules/sub/info/exclude)
+    let modules_dir = root.path().join(".git").join("modules").join("sub");
+    let exclude_path = modules_dir.join("info").join("exclude");
+    stdfs::create_dir_all(exclude_path.parent().unwrap()).unwrap();
+    stdfs::write(&exclude_path, b"ignored.txt\n").unwrap();
+
+    // Create files in the submodule working tree
+    let sub_work = root.path().join("sub");
+    stdfs::write(sub_work.join("ignored.txt"), b"").unwrap();
+    stdfs::write(sub_work.join("shown.txt"), b"").unwrap();
+
+    // Assert that --gitignore hides ignored.txt but lists shown.txt
+    cmd()
+        .arg("--gitignore")
+        .arg("--ignore-config")
+        .arg(&sub_work)
+        .assert()
+        .stdout(predicate::str::is_match(r"shown\.txt\r?\n$").unwrap())
+        .stdout(predicate::str::contains("ignored.txt").not());
 }
