@@ -122,6 +122,9 @@ lsd is a ls command with a lot of pretty colours and some other stuff to enrich 
 `-I, --ignore-glob <pattern>...`
 : Do not display files/directories with names matching the glob pattern(s). More than one can be specified by repeating the argument [default: ]
 
+`--gitignore`
+: Respect git-style ignore files when listing. When enabled, entries ignored by .gitignore files in directories and .git/info/exclude are not displayed. [default: false]
+
 `--permission <permission>...`
 : How to display permissions [default: rwx for linux, attributes for windows]  [possible values: rwx, octal, attributes, disable]
 
