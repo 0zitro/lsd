@@ -734,7 +734,7 @@ mod tests {
         dir.child("one.d/.hidden").touch().unwrap();
         let mut metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
             .unwrap()
-            .recurse_into(42, &flags, None)
+            .recurse_into(42, &flags, None, None)
             .unwrap()
             .0
             .unwrap();
@@ -767,7 +767,7 @@ mod tests {
         dir.child("dir/file").touch().unwrap();
         let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
             .unwrap()
-            .recurse_into(42, &flags, None)
+            .recurse_into(42, &flags, None, None)
             .unwrap()
             .0
             .unwrap();
@@ -808,7 +808,7 @@ mod tests {
         dir.child("dir/file").touch().unwrap();
         let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
             .unwrap()
-            .recurse_into(42, &flags, None)
+            .recurse_into(42, &flags, None, None)
             .unwrap()
             .0
             .unwrap();
@@ -848,7 +848,7 @@ mod tests {
         dir.child("one.d/two").touch().unwrap();
         let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
             .unwrap()
-            .recurse_into(42, &flags, None)
+            .recurse_into(42, &flags, None, None)
             .unwrap()
             .0
             .unwrap();
@@ -879,7 +879,7 @@ mod tests {
         dir.child("test").touch().unwrap();
         let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
             .unwrap()
-            .recurse_into(1, &flags, None)
+            .recurse_into(1, &flags, None, None)
             .unwrap()
             .0
             .unwrap();
@@ -913,7 +913,7 @@ mod tests {
         dir.child("testdir").create_dir_all().unwrap();
         let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
             .unwrap()
-            .recurse_into(1, &flags, None)
+            .recurse_into(1, &flags, None, None)
             .unwrap()
             .0
             .unwrap();

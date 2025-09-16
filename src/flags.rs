@@ -3,6 +3,7 @@ pub mod color;
 pub mod date;
 pub mod dereference;
 pub mod display;
+pub mod gitignore;
 pub mod header;
 pub mod hyperlink;
 pub mod icons;
@@ -26,6 +27,7 @@ pub use color::{ColorOption, ThemeOption};
 pub use date::DateFlag;
 pub use dereference::Dereference;
 pub use display::Display;
+pub use gitignore::GitIgnore;
 pub use header::Header;
 pub use hyperlink::HyperlinkOption;
 pub use icons::IconOption;
@@ -67,6 +69,7 @@ pub struct Flags {
     pub display_indicators: Indicators,
     pub icons: Icons,
     pub ignore_globs: IgnoreGlobs,
+    pub gitignore: GitIgnore,
     pub layout: Layout,
     pub no_symlink: NoSymlink,
     pub recursion: Recursion,
@@ -102,6 +105,7 @@ impl Flags {
             display_indicators: Indicators::configure_from(cli, config),
             icons: Icons::configure_from(cli, config),
             ignore_globs: IgnoreGlobs::configure_from(cli, config)?,
+            gitignore: GitIgnore::configure_from(cli, config),
             no_symlink: NoSymlink::configure_from(cli, config),
             recursion: Recursion::configure_from(cli, config),
             sorting: Sorting::configure_from(cli, config),

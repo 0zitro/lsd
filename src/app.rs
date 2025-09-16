@@ -150,6 +150,10 @@ pub struct Cli {
     #[arg(short = 'I', long, value_name = "PATTERN")]
     pub ignore_glob: Vec<String>,
 
+    /// Ignore files as defined in .gitignore and .git/info/exclude
+    #[arg(long)]
+    pub gitignore: bool,
+
     /// Display the index number of each file
     #[arg(short, long)]
     pub inode: bool,
