@@ -44,7 +44,11 @@ impl GitignoreCtx {
 }
 
 pub fn build_gitignore_context(start_path: &Path) -> GitignoreCtx {
-    let mut ctx = GitignoreCtx { repo_root: None, repo_exclude: None, dir_ignores: Vec::new() };
+    let mut ctx = GitignoreCtx {
+        repo_root: None,
+        repo_exclude: None,
+        dir_ignores: Vec::new(),
+    };
 
     #[cfg(not(feature = "no-git"))]
     if let Ok(repo) = git2::Repository::discover(start_path) {

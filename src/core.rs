@@ -120,7 +120,9 @@ impl Core {
             // Build a gitignore context for this root path if requested
             let gitignore_ctx = if self.flags.gitignore.0 {
                 Some(build_gitignore_context(&path))
-            } else { None };
+            } else {
+                None
+            };
             let mut meta =
                 match Meta::from_path(&path, self.flags.dereference.0, self.flags.permission) {
                     Ok(meta) => meta,
@@ -140,7 +142,8 @@ impl Core {
             let recurse =
                 self.flags.layout == Layout::Tree || self.flags.display != Display::DirectoryOnly;
             if recurse {
-                match meta.recurse_into(depth, &self.flags, cache.as_ref(), gitignore_ctx.as_ref()) {
+                match meta.recurse_into(depth, &self.flags, cache.as_ref(), gitignore_ctx.as_ref())
+                {
                     Ok((content, path_exit_code)) => {
                         meta.content = content;
                         meta.git_status = cache.and_then(|cache| cache.get(&meta.path, true));

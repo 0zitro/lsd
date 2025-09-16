@@ -178,7 +178,8 @@ impl Meta {
 
             // check dereferencing
             if flags.dereference.0 || !matches!(entry_meta.file_type, FileType::SymLink { .. }) {
-                match entry_meta.recurse_into(depth - 1, flags, cache, child_gitignore_ctx.as_ref()) {
+                match entry_meta.recurse_into(depth - 1, flags, cache, child_gitignore_ctx.as_ref())
+                {
                     Ok((content, rec_exit_code)) => {
                         entry_meta.content = content;
                         exit_code.set_if_greater(rec_exit_code);

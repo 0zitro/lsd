@@ -4,8 +4,8 @@ extern crate predicates;
 use assert_cmd::prelude::*;
 use assert_fs::prelude::*;
 use predicates::prelude::*;
-use std::process::Command;
 use std::fs as stdfs;
+use std::process::Command;
 
 #[cfg(unix)]
 use std::os::unix::fs as unixfs;
@@ -839,9 +839,7 @@ fn test_gitignore_simple_glob_and_negation() {
     dir.child("keep.log").touch().unwrap();
     dir.child("keep.txt").touch().unwrap();
     dir.child(".gitignore")
-        .write_str(
-            "foo\n*.log\n!keep.log\n"
-        )
+        .write_str("foo\n*.log\n!keep.log\n")
         .unwrap();
 
     cmd()
@@ -856,7 +854,13 @@ fn test_gitignore_simple_glob_and_negation() {
 #[cfg(not(feature = "no-git"))]
 fn test_git_info_exclude_hides_files() {
     // Skip if git is not available in PATH (cross-platform)
-    if Command::new("git").arg("--version").status().ok().filter(|s| s.success()).is_none() {
+    if Command::new("git")
+        .arg("--version")
+        .status()
+        .ok()
+        .filter(|s| s.success())
+        .is_none()
+    {
         return;
     }
     let dir = tempdir();
@@ -864,7 +868,10 @@ fn test_git_info_exclude_hides_files() {
     assert!(
         Command::new("git")
             .current_dir(dir.path())
-            .args(["init", "-q"]).status().unwrap().success()
+            .args(["init", "-q"])
+            .status()
+            .unwrap()
+            .success()
     );
     // Create .git/info/exclude
     let exclude_path = dir.path().join(".git").join("info").join("exclude");
@@ -887,7 +894,13 @@ fn test_git_info_exclude_hides_files() {
 #[cfg(not(feature = "no-git"))]
 fn test_submodule_git_info_exclude_hides_files() {
     // Skip if git is not available in PATH (cross-platform)
-    if Command::new("git").arg("--version").status().ok().filter(|s| s.success()).is_none() {
+    if Command::new("git")
+        .arg("--version")
+        .status()
+        .ok()
+        .filter(|s| s.success())
+        .is_none()
+    {
         return;
     }
     // Prepare a root repo
@@ -904,21 +917,31 @@ fn test_submodule_git_info_exclude_hides_files() {
     assert!(
         Command::new("git")
             .current_dir(root.path())
-            .args(["config", "commit.gpgsign", "false"]).status().unwrap().success()
+            .args(["config", "commit.gpgsign", "false"])
+            .status()
+            .unwrap()
+            .success()
     );
     // Newer git may block file:// for submodule add; allow local path
     let _ = Command::new("git")
         .current_dir(root.path())
-        .args(["config", "protocol.file.allow", "always"]).status();
+        .args(["config", "protocol.file.allow", "always"])
+        .status();
     assert!(
         Command::new("git")
             .current_dir(root.path())
-            .args(["config", "user.name", "test"]).status().unwrap().success()
+            .args(["config", "user.name", "test"])
+            .status()
+            .unwrap()
+            .success()
     );
     assert!(
         Command::new("git")
             .current_dir(root.path())
-            .args(["config", "user.email", "test@example.com"]).status().unwrap().success()
+            .args(["config", "user.email", "test@example.com"])
+            .status()
+            .unwrap()
+            .success()
     );
 
     // Prepare a local repo to use as submodule source
@@ -934,28 +957,43 @@ fn test_submodule_git_info_exclude_hides_files() {
     assert!(
         Command::new("git")
             .current_dir(sub_src.path())
-            .args(["config", "commit.gpgsign", "false"]).status().unwrap().success()
+            .args(["config", "commit.gpgsign", "false"])
+            .status()
+            .unwrap()
+            .success()
     );
     assert!(
         Command::new("git")
             .current_dir(sub_src.path())
-            .args(["config", "user.name", "test"]).status().unwrap().success()
+            .args(["config", "user.name", "test"])
+            .status()
+            .unwrap()
+            .success()
     );
     assert!(
         Command::new("git")
             .current_dir(sub_src.path())
-            .args(["config", "user.email", "test@example.com"]).status().unwrap().success()
+            .args(["config", "user.email", "test@example.com"])
+            .status()
+            .unwrap()
+            .success()
     );
     stdfs::write(sub_src.path().join("README"), b"submodule").unwrap();
     assert!(
         Command::new("git")
             .current_dir(sub_src.path())
-            .args(["add", "-A"]).status().unwrap().success()
+            .args(["add", "-A"])
+            .status()
+            .unwrap()
+            .success()
     );
     assert!(
         Command::new("git")
             .current_dir(sub_src.path())
-            .args(["commit", "-q", "-m", "init"]).status().unwrap().success()
+            .args(["commit", "-q", "-m", "init"])
+            .status()
+            .unwrap()
+            .success()
     );
 
     // Add submodule to root as ./sub
