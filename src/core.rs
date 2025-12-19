@@ -142,8 +142,13 @@ impl Core {
             let recurse =
                 self.flags.layout == Layout::Tree || self.flags.display != Display::DirectoryOnly;
             if recurse {
-                match meta.recurse_into(depth, &self.flags, cache.as_ref(), gitignore_ctx.as_ref())
-                {
+                match meta.recurse_into(
+                    depth,
+                    &self.flags,
+                    cache.as_ref(),
+                    gitignore_ctx.as_ref(),
+                    &meta,
+                ) {
                     Ok((content, path_exit_code)) => {
                         meta.content = content;
                         meta.git_status = cache.and_then(|cache| cache.get(&meta.path, true));

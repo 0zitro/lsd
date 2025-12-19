@@ -699,9 +699,9 @@ mod tests {
         dir.child("one.d").create_dir_all().unwrap();
         dir.child("one.d/two").touch().unwrap();
         dir.child("one.d/.hidden").touch().unwrap();
-        let mut metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(42, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let mut metas = toplevel
+            .recurse_into(42, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -732,9 +732,9 @@ mod tests {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("dir").create_dir_all().unwrap();
         dir.child("dir/file").touch().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(42, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(42, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -773,9 +773,10 @@ mod tests {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("dir").create_dir_all().unwrap();
         dir.child("dir/file").touch().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(42, &flags, None, None)
+
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(42, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -813,9 +814,9 @@ mod tests {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("one.d").create_dir_all().unwrap();
         dir.child("one.d/two").touch().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(42, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(42, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -844,9 +845,9 @@ mod tests {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("testdir").create_dir_all().unwrap();
         dir.child("test").touch().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(1, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(1, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -878,9 +879,9 @@ mod tests {
 
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("testdir").create_dir_all().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(1, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(1, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();

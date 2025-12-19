@@ -67,6 +67,7 @@ impl Meta {
         flags: &Flags,
         cache: Option<&GitCache>,
         gitignore_ctx: Option<&GitignoreCtx>,
+        toplevel: &Self,
     ) -> io::Result<(Option<Vec<Meta>>, ExitCode)> {
         if depth == 0 {
             return Ok((None, ExitCode::OK));
@@ -124,17 +125,21 @@ impl Meta {
         for entry in entries {
             let entry = entry?;
             let path = entry.path();
+            let path_from_toplevel = path.strip_prefix(&toplevel.path).unwrap_or(&path);
 
             let name = path
                 .file_name()
                 .ok_or_else(|| Error::new(ErrorKind::InvalidInput, "invalid file name"))?;
 
-            if flags.ignore_globs.0.is_match(name) {
+            // eprintln!("SKIP CHECK :: {path:?} | {:?} -> {path_from_toplevel:?}", toplevel.path);
+            if flags.ignore_globs.0.is_match(path_from_toplevel) {
+                // eprintln!("  -> SKIPPED (ignore_globs)");
                 continue;
             }
 
             if let Some(ctx) = &child_gitignore_ctx {
                 if ctx.is_ignored(&path, entry.file_type()?.is_dir()) {
+                    // eprintln!("  -> SKIPPED (gitignore)");
                     continue;
                 }
             }
@@ -178,8 +183,13 @@ impl Meta {
 
             // check dereferencing
             if flags.dereference.0 || !matches!(entry_meta.file_type, FileType::SymLink { .. }) {
-                match entry_meta.recurse_into(depth - 1, flags, cache, child_gitignore_ctx.as_ref())
-                {
+                match entry_meta.recurse_into(
+                    depth - 1,
+                    flags,
+                    cache,
+                    child_gitignore_ctx.as_ref(),
+                    toplevel,
+                ) {
                     Ok((content, rec_exit_code)) => {
                         entry_meta.content = content;
                         exit_code.set_if_greater(rec_exit_code);
