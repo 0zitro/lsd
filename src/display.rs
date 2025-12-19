@@ -256,6 +256,7 @@ fn inner_display_tree(
         };
 
         // Choose display option based on tree-path flags
+        #[allow(clippy::if_same_then_else)]
         let display_option = if matches!(flags.tree_path.kind, TreePathType::Absolute)
             && (flags.tree_path.scope == TreePathScope::All || tree_depth_prefix.0 == 0)
         {
@@ -732,9 +733,9 @@ mod tests {
         dir.child("one.d").create_dir_all().unwrap();
         dir.child("one.d/two").touch().unwrap();
         dir.child("one.d/.hidden").touch().unwrap();
-        let mut metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(42, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let mut metas = toplevel
+            .recurse_into(42, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -765,9 +766,9 @@ mod tests {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("dir").create_dir_all().unwrap();
         dir.child("dir/file").touch().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(42, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(42, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -806,9 +807,10 @@ mod tests {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("dir").create_dir_all().unwrap();
         dir.child("dir/file").touch().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(42, &flags, None, None)
+
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(42, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -846,9 +848,9 @@ mod tests {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("one.d").create_dir_all().unwrap();
         dir.child("one.d/two").touch().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(42, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(42, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -877,9 +879,9 @@ mod tests {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("testdir").create_dir_all().unwrap();
         dir.child("test").touch().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(1, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(1, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -911,9 +913,9 @@ mod tests {
 
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("testdir").create_dir_all().unwrap();
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(1, &flags, None, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(1, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -1022,13 +1024,20 @@ mod tests {
     fn test_tree_path_absolute_root_only() {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("dir").create_dir_all().unwrap();
-        let argv = ["lsd", "--tree", "--tree-path", "absolute", "--tree-path-scope", "root"];
+        let argv = [
+            "lsd",
+            "--tree",
+            "--tree-path",
+            "absolute",
+            "--tree-path-scope",
+            "root",
+        ];
         let cli = Cli::try_parse_from(argv).unwrap();
         let flags = Flags::configure_from(&cli, &Config::with_none()).unwrap();
 
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(2, &flags, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(2, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -1040,10 +1049,10 @@ mod tests {
             &GitTheme::new(),
         );
         // First line should be absolute path of temp dir
-    let first = out.lines().next().unwrap();
-    let abs = std::fs::canonicalize(dir.path()).unwrap();
-    let abs_str: String = abs.to_string_lossy().into_owned();
-    assert!(first.starts_with(&abs_str));
+        let first = out.lines().next().unwrap();
+        let abs = std::fs::canonicalize(dir.path()).unwrap();
+        let abs_str: String = abs.to_string_lossy().into_owned();
+        assert!(first.starts_with(&abs_str));
     }
 
     #[test]
@@ -1051,13 +1060,20 @@ mod tests {
         let dir = assert_fs::TempDir::new().unwrap();
         dir.child("dir").create_dir_all().unwrap();
         dir.child("dir/file").touch().unwrap();
-        let argv = ["lsd", "--tree", "--tree-path", "absolute", "--tree-path-scope", "all"];
+        let argv = [
+            "lsd",
+            "--tree",
+            "--tree-path",
+            "absolute",
+            "--tree-path-scope",
+            "all",
+        ];
         let cli = Cli::try_parse_from(argv).unwrap();
         let flags = Flags::configure_from(&cli, &Config::with_none()).unwrap();
 
-        let metas = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx)
-            .unwrap()
-            .recurse_into(3, &flags, None)
+        let toplevel = Meta::from_path(Path::new(dir.path()), false, PermissionFlag::Rwx).unwrap();
+        let metas = toplevel
+            .recurse_into(3, &flags, None, None, &toplevel)
             .unwrap()
             .0
             .unwrap();
@@ -1069,7 +1085,9 @@ mod tests {
             &GitTheme::new(),
         );
         for l in out.lines() {
-            if l.trim().is_empty() { continue; }
+            if l.trim().is_empty() {
+                continue;
+            }
             // Lines include tree edges; ensure absolute paths appear somewhere on each line
             assert!(l.contains('/'));
         }

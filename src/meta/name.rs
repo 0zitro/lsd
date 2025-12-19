@@ -272,7 +272,10 @@ mod test {
             .to_string_lossy()
             .to_string();
 
-        assert!(rendered.ends_with(&absolute), "rendered={rendered} absolute={absolute}");
+        assert!(
+            rendered.ends_with(&absolute),
+            "rendered={rendered} absolute={absolute}"
+        );
     }
 
     #[test]

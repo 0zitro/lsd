@@ -122,10 +122,13 @@ mod tests {
     fn tree_path_from_config_both() {
         let argv = ["lsd"]; // no cli args
         let cli = Cli::try_parse_from(argv).unwrap();
-        let cfg = serde_yaml::from_str::<Config>(r#"
+        let cfg = serde_yaml::from_str::<Config>(
+            r#"
             tree-path: relative
             tree-path-scope: all
-        "#).unwrap();
+        "#,
+        )
+        .unwrap();
         let flags = Flags::configure_from(&cli, &cfg).unwrap();
         assert_eq!(TreePathType::Relative, flags.tree_path.kind);
         assert_eq!(TreePathScope::All, flags.tree_path.scope);
@@ -133,18 +136,15 @@ mod tests {
 
     #[test]
     fn tree_path_from_cli_overrides_config() {
-        let argv = [
-            "lsd",
-            "--tree-path",
-            "absolute",
-            "--tree-path-scope",
-            "all",
-        ];
+        let argv = ["lsd", "--tree-path", "absolute", "--tree-path-scope", "all"];
         let cli = Cli::try_parse_from(argv).unwrap();
-        let cfg = serde_yaml::from_str::<Config>(r#"
+        let cfg = serde_yaml::from_str::<Config>(
+            r#"
             tree-path: relative
             tree-path-scope: root
-        "#).unwrap();
+        "#,
+        )
+        .unwrap();
         let flags = Flags::configure_from(&cli, &cfg).unwrap();
         assert_eq!(TreePathType::Absolute, flags.tree_path.kind);
         assert_eq!(TreePathScope::All, flags.tree_path.scope);
@@ -154,9 +154,12 @@ mod tests {
     fn tree_path_scope_from_cli_and_kind_from_config() {
         let argv = ["lsd", "--tree-path-scope", "all"]; // only scope via CLI
         let cli = Cli::try_parse_from(argv).unwrap();
-        let cfg = serde_yaml::from_str::<Config>(r#"
+        let cfg = serde_yaml::from_str::<Config>(
+            r#"
             tree-path: absolute
-        "#).unwrap();
+        "#,
+        )
+        .unwrap();
         let flags = Flags::configure_from(&cli, &cfg).unwrap();
         assert_eq!(TreePathType::None, flags.tree_path.kind);
         assert_eq!(TreePathScope::All, flags.tree_path.scope);
